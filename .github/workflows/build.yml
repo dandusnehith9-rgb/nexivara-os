@@ -1,7 +1,12 @@
-name: Build Nexivara OS
+name: Build ISO
 
 on:
   workflow_dispatch:
+    inputs:
+      spec:
+        description: "JSON OS specification"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -13,9 +18,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Install dependencies
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -24,29 +29,43 @@ jobs:
             xorriso \
             grub-pc-bin \
             grub-efi-amd64-bin \
-            grub-efi-amd64-signed \
-            shim-signed \
             mtools \
-            dosfstools \
+            qemu-system-x86 \
+            python3 \
             python3-pip \
             git
 
       - name: Download AI OS Builder
         run: |
-          git clone https://github.com/puzzleboxsoftworks/ai-os-builder.git builder
+          git clone --depth 1 \
+            https://github.com/puzzleboxsoftworks/ai-os-builder.git \
+            /tmp/ai-os-builder
 
       - name: Install AI OS Builder
         run: |
-          cd builder
+          cd /tmp/ai-os-builder
           python3 -m pip install --break-system-packages -e .
 
-      - name: Build Nexivara
+      - name: Write OS specification
+        env:
+          SPEC_JSON: ${{ inputs.spec }}
         run: |
-          mkdir -p output
-          sudo aios build spec.json -o output/nexivara-os.iso
+          printf '%s' "$SPEC_JSON" > spec.json
+          python3 -m json.tool spec.json > /dev/null
+          echo "Specification is valid JSON."
+
+      - name: Build ISO
+        run: |
+          sudo aios build spec.json -o nexivara-os.iso
+
+      - name: Verify ISO
+        run: |
+          ls -lh nexivara-os.iso
+          file nexivara-os.iso
 
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: nexivara-os-iso
-          path: output/nexivara-os.iso
+          name: nexivara-os
+          path: nexivara-os.iso
+          retention-days: 7
