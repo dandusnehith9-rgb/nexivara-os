@@ -1,0 +1,24 @@
+{
+  "name": "Nexivara OS",
+  "slug": "nexivara-os",
+  "version": "1.0",
+  "description": "A fast and stable gaming, office, and development Linux workstation optimized for NVIDIA hardware.",
+  "suite": "bookworm",
+  "arch": "amd64",
+  "mirror": "https://deb.debian.org/debian",
+  "desktop": "xfce",
+  "hostname": "nexivara",
+  "username": "gamer",
+  "autologin": true,
+  "locale": "en_US.UTF-8",
+  "timezone": "America/Chicago",
+  "keyboard": "us",
+  "accent_color": "#35E07F",
+  "enable_services": [
+    "ssh"
+  ],
+  "disable_services": [],
+  "files": {},
+  "post_install": [],
+  "kernel_cmdline": "quiet splash"
+}
