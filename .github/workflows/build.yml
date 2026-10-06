@@ -1,0 +1,52 @@
+name: Build Nexivara OS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Nexivara ISO
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            debootstrap \
+            squashfs-tools \
+            xorriso \
+            grub-pc-bin \
+            grub-efi-amd64-bin \
+            grub-efi-amd64-signed \
+            shim-signed \
+            mtools \
+            dosfstools \
+            python3-pip \
+            git
+
+      - name: Download AI OS Builder
+        run: |
+          git clone https://github.com/puzzleboxsoftworks/ai-os-builder.git builder
+
+      - name: Install AI OS Builder
+        run: |
+          cd builder
+          python3 -m pip install --break-system-packages -e .
+
+      - name: Build Nexivara
+        run: |
+          mkdir -p output
+          sudo aios build spec.json -o output/nexivara-os.iso
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexivara-os-iso
+          path: output/nexivara-os.iso
